@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Almacén Panadería</title>
+
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+
+<body>
+
+    <div class="contenedor">
+        <h1>📦 Almacén Panadería</h1>
+
+        <p>Sistema de gestión de inventario</p>
+
+        <button id="btnProbar">
+            Probar conexión con Supabase
+        </button>
+
+        <p id="resultado"></p>
+        <hr>
+
+<h2>📋 Productos del almacén</h2>
+
+<button id="btnProductos">
+    Ver productos
+</button>
+
+<div id="listaProductos"></div>
+<hr>
+
+<h2>📥 Registrar ingreso</h2>
+
+<form id="formIngreso">
+
+    <label>Producto:</label>
+    <select id="productoIngreso" required>
+        <option value="">Seleccione un producto</option>
+    </select>
+
+    <label>Cantidad:</label>
+    <input
+        type="number"
+        id="cantidadIngreso"
+        min="1"
+        step="0.01"
+        required
+    >
+
+    <label>Precio unitario:</label>
+    <input
+        type="number"
+        id="precioIngreso"
+        min="0"
+        step="0.01"
+        required
+    >
+
+    <label>Fecha de ingreso:</label>
+    <input
+        type="date"
+        id="fechaIngreso"
+        required
+    >
+
+    <label>Observación:</label>
+    <input
+        type="text"
+        id="observacionIngreso"
+        placeholder="Ejemplo: Compra a proveedor"
+    >
+
+    <button type="submit">
+        📥 Registrar ingreso
+    </button>
+
+</form>
+
+<p id="resultadoIngreso"></p>
+<hr>
+
+<h2>📤 Registrar salida</h2>
+
+<form id="formSalida">
+
+    <label>Producto:</label>
+    <select id="productoSalida" required>
+        <option value="">Seleccione un producto</option>
+    </select>
+
+    <label>Cantidad:</label>
+    <input
+        type="number"
+        id="cantidadSalida"
+        min="1"
+        step="0.01"
+        required
+    >
+
+    <label>Fecha de salida:</label>
+    <input
+        type="date"
+        id="fechaSalida"
+        required
+    >
+
+    <label>Observación:</label>
+    <input
+        type="text"
+        id="observacionSalida"
+        placeholder="Ejemplo: Salida para producción"
+    >
+
+    <button type="submit">
+        📤 Registrar salida
+    </button>
+
+</form>
+
+<p id="resultadoSalida"></p>
+
+    </div>
+
+    <!-- Biblioteca de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Conexión con Supabase -->
+    <script src="js/supabase.js"></script>
+
+    <!-- Funciones del inventario -->
+    <script src="js/inventario.js"></script>
+
+    <script>
+        const boton = document.getElementById("btnProbar");
+        const resultado = document.getElementById("resultado");
+
+        boton.addEventListener("click", async () => {
+
+            resultado.textContent = "Conectando...";
+
+            try {
+
+                const { data, error } = await supabaseClient
+                    .from("productos")
+                    .select("codigo, nombre")
+                    .limit(1);
+
+                if (error) {
+                    throw error;
+                }
+
+                resultado.textContent =
+                    "✅ Conexión correcta con Supabase";
+
+                console.log(data);
+
+            } catch (error) {
+
+                console.error(error);
+
+                resultado.textContent =
+                    "❌ Error de conexión: " + error.message;
+            }
+        });
+    </script>
+
+</body>
+</html>
