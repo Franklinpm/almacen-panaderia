@@ -1,110 +1,171 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Alicorp Soluciones Cusco</title>
+    <title>Almacén Panadería</title>
 
     <link rel="stylesheet" href="css/estilos.css">
-
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-    <main class="app">
+    <div class="contenedor">
+        <h1>📦 Almacén Panadería</h1>
 
-        <!-- LOGIN -->
-        <section id="pantallaLogin" class="pantalla-login">
+        <p>Sistema de gestión de inventario</p>
 
-            <div class="logo-app">
-                
-                <img
-                    src="img/logo-alicorp.png"
-                    alt="Logo Alicorp"
-                    class="logo-alicorp"
-                >
+        <button id="btnProbar">
+            Probar conexión con Supabase
+        </button>
 
-                <h1>Alicorp Soluciones Cusco</h1>
+        <p id="resultado"></p>
+        <hr>
 
-                <p>Sistema de gestión de inventario</p>
-            </div>
+<h2>📋 Productos del almacén</h2>
 
-            <div class="login-card">
+<button id="btnProductos">
+    Ver productos
+</button>
 
-                <h2>Iniciar sesión</h2>
+<div id="listaProductos"></div>
+<hr>
 
-                <p class="texto-login">
-                    Ingrese sus credenciales para continuar
-                </p>
+<h2>📥 Registrar ingreso</h2>
 
-                <form id="formularioLogin">
+<form id="formIngreso">
 
-                    <label for="usuario">
-                        Usuario
-                    </label>
+    <label>Producto:</label>
+    <select id="productoIngreso" required>
+        <option value="">Seleccione un producto</option>
+    </select>
 
-                    <input
-                        type="text"
-                        id="usuario"
-                        placeholder="Ingrese su usuario"
-                        required
-                    >
-                                        
-                    <label for="password">
-                        Contraseña
-                    </label>
+    <label>Cantidad:</label>
+    <input
+        type="number"
+        id="cantidadIngreso"
+        min="1"
+        step="0.01"
+        required
+    >
 
-                    <input
-                        type="password"
-                        id="password"
-                        placeholder="Ingrese su contraseña"
-                        required
-                    >
+    <label>Precio unitario:</label>
+    <input
+        type="number"
+        id="precioIngreso"
+        min="0"
+        step="0.01"
+        required
+    >
 
-                    <button type="submit" class="btn-login">
-                        🔐 INGRESAR
-                    </button>
+    <label>Fecha de ingreso:</label>
+    <input
+        type="date"
+        id="fechaIngreso"
+        required
+    >
 
-                </form>
+    <label>Observación:</label>
+    <input
+        type="text"
+        id="observacionIngreso"
+        placeholder="Ejemplo: Compra a proveedor"
+    >
 
-                <p id="mensajeLogin" class="mensaje-login"></p>
+    <button type="submit">
+        📥 Registrar ingreso
+    </button>
 
-            </div>
+</form>
 
-        </section>
+<p id="resultadoIngreso"></p>
+<hr>
 
+<h2>📤 Registrar salida</h2>
 
-        <!-- APLICACIÓN -->
-        <section id="pantallaApp" class="pantalla-app" style="display: none;">
+<form id="formSalida">
 
-            <header class="encabezado">
+    <label>Producto:</label>
+    <select id="productoSalida" required>
+        <option value="">Seleccione un producto</option>
+    </select>
 
-                <h1 id="nombreEmpresa">
-                    Alicorp Soluciones Cusco
-                </h1>
+    <label>Cantidad:</label>
+    <input
+        type="number"
+        id="cantidadSalida"
+        min="1"
+        step="0.01"
+        required
+    >
 
-                <p id="tipoUsuario">
-                    Sistema de gestión de inventario
-                </p>
+    <label>Fecha de salida:</label>
+    <input
+        type="date"
+        id="fechaSalida"
+        required
+    >
 
-            </header>
+    <label>Observación:</label>
+    <input
+        type="text"
+        id="observacionSalida"
+        placeholder="Ejemplo: Salida para producción"
+    >
 
-            <div id="contenidoApp"></div>
+    <button type="submit">
+        📤 Registrar salida
+    </button>
 
-        </section>
+</form>
 
-    </main>
+<p id="resultadoSalida"></p>
 
+    </div>
 
-    <!-- ARCHIVOS JAVASCRIPT -->
+    <!-- Biblioteca de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- Conexión con Supabase -->
     <script src="js/supabase.js"></script>
-    <script src="js/login.js"></script>
+
+    <!-- Funciones del inventario -->
+    <script src="js/inventario.js"></script>
+
+    <script>
+        const boton = document.getElementById("btnProbar");
+        const resultado = document.getElementById("resultado");
+
+        boton.addEventListener("click", async () => {
+
+            resultado.textContent = "Conectando...";
+
+            try {
+
+                const { data, error } = await supabaseClient
+                    .from("productos")
+                    .select("codigo, nombre")
+                    .limit(1);
+
+                if (error) {
+                    throw error;
+                }
+
+                resultado.textContent =
+                    "✅ Conexión correcta con Supabase";
+
+                console.log(data);
+
+            } catch (error) {
+
+                console.error(error);
+
+                resultado.textContent =
+                    "❌ Error de conexión: " + error.message;
+            }
+        });
+    </script>
 
 </body>
-
 </html>
