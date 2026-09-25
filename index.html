@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Alicorp Soluciones Cusco</title>
+
+    <link rel="stylesheet" href="css/estilos.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+    <main class="app">
+
+        <!-- LOGIN -->
+        <section id="pantallaLogin" class="pantalla-login">
+
+            <div class="logo-app">
+                
+                <img
+                    src="img/logo-alicorp.png"
+                    alt="Logo Alicorp"
+                    class="logo-alicorp"
+                >
+
+                <h1>Alicorp Soluciones Cusco</h1>
+
+                <p>Sistema de gestión de inventario</p>
+            </div>
+
+            <div class="login-card">
+
+                <h2>Iniciar sesión</h2>
+
+                <p class="texto-login">
+                    Ingrese sus credenciales para continuar
+                </p>
+
+                <form id="formularioLogin">
+
+                    <label for="usuario">
+                        Usuario
+                    </label>
+
+                    <input
+                        type="text"
+                        id="usuario"
+                        placeholder="Ingrese su usuario"
+                        required
+                    >
+                                        
+                    <label for="password">
+                        Contraseña
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Ingrese su contraseña"
+                        required
+                    >
+
+                    <button type="submit" class="btn-login">
+                        🔐 INGRESAR
+                    </button>
+
+                </form>
+
+                <p id="mensajeLogin" class="mensaje-login"></p>
+
+            </div>
+
+        </section>
+
+
+        <!-- APLICACIÓN -->
+        <section id="pantallaApp" class="pantalla-app" style="display: none;">
+
+            <header class="encabezado">
+
+                <h1 id="nombreEmpresa">
+                    Alicorp Soluciones Cusco
+                </h1>
+
+                <p id="tipoUsuario">
+                    Sistema de gestión de inventario
+                </p>
+
+            </header>
+
+            <div id="contenidoApp"></div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ARCHIVOS JAVASCRIPT -->
+
+    <script src="js/supabase.js"></script>
+    <script src="js/login.js"></script>
+
+</body>
+
+</html>
