@@ -4,133 +4,546 @@
 
 body {
     margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background: #f4f6f8;
-    color: #222;
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f3f5f7;
+    color: #1f2937;
 }
 
-.contenedor {
-    width: 95%;
-    max-width: 1100px;
-    margin: 20px auto;
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-}
+/* CONTENEDOR PRINCIPAL */
 
-h1 {
-    text-align: center;
-    margin-bottom: 5px;
-}
-
-h2 {
-    margin-top: 25px;
-}
-
-button {
+.app {
     width: 100%;
+    min-height: 100vh;
+}
+
+
+/* ============================= */
+/* LOGIN */
+/* ============================= */
+
+.pantalla-login {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 25px 18px;
+}
+
+
+/* LOGO Y NOMBRE */
+
+.logo-app {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.logo-icono {
+    width: 75px;
+    height: 75px;
+    margin: 0 auto 15px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #b91c1c;
+    border-radius: 18px;
+
+    font-size: 38px;
+}
+
+.logo-app h1 {
+    margin: 0;
+    font-size: 28px;
+    color: #991b1b;
+}
+
+.logo-app p {
+    margin-top: 8px;
+    margin-bottom: 0;
+
+    font-size: 15px;
+    color: #6b7280;
+}
+
+
+/* TARJETA LOGIN */
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+
+    background: white;
+
+    padding: 28px 24px;
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.login-card h2 {
+    margin: 0;
+    text-align: center;
+    font-size: 23px;
+}
+
+.texto-login {
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+
+/* FORMULARIO */
+
+#formularioLogin {
+    display: flex;
+    flex-direction: column;
+}
+
+#formularioLogin label {
+    margin-top: 12px;
+    margin-bottom: 6px;
+
+    font-size: 14px;
+    font-weight: bold;
+}
+
+#formularioLogin input {
+    width: 100%;
+
     padding: 13px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 8px;
-    background: #2563eb;
-    color: white;
+
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+
     font-size: 16px;
+
+    outline: none;
+}
+
+#formularioLogin input:focus {
+    border-color: #b91c1c;
+    box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.10);
+}
+
+
+/* BOTÓN LOGIN */
+
+.btn-login {
+    width: 100%;
+
+    margin-top: 22px;
+
+    padding: 14px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: #b91c1c;
+    color: white;
+
+    font-size: 16px;
+    font-weight: bold;
+
     cursor: pointer;
 }
 
-button:hover {
-    background: #1d4ed8;
+.btn-login:hover {
+    background: #991b1b;
 }
 
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
 
-label {
+/* MENSAJE LOGIN */
+
+.mensaje-login {
+    margin-top: 15px;
+
+    text-align: center;
+
+    font-size: 14px;
     font-weight: bold;
-    margin-top: 8px;
 }
 
-input,
-select {
+
+/* ============================= */
+/* APLICACIÓN */
+/* ============================= */
+
+.pantalla-app {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 7px;
+    min-height: 100vh;
+}
+
+.encabezado {
+    background: #991b1b;
+    color: white;
+
+    padding: 20px;
+
+    text-align: center;
+}
+
+.encabezado h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.encabezado p {
+    margin: 6px 0 0;
+    font-size: 14px;
+}
+
+
+/* ============================= */
+/* CELULAR */
+/* ============================= */
+
+@media (max-width: 600px) {
+
+    .pantalla-login {
+        padding: 20px 15px;
+    }
+
+    .logo-app h1 {
+        font-size: 25px;
+    }
+
+    .login-card {
+        padding: 25px 20px;
+    }
+}
+
+/* =========================================
+   PANEL DE ALERTAS
+   ========================================= */
+
+#listaAlertas {
+    width: 100%;
+    box-sizing: border-box;
+
+    margin-top: 20px;
+    padding: 15px;
+
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+
+    /* Desplazamiento horizontal */
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    background: #f7f9fb;
+    border: 1px solid #d9dee5;
+    border-radius: 12px;
+
+    /* Altura fija */
+    min-height: 210px;
+}
+
+
+/* =========================================
+   TARJETAS DE ALERTA
+   ========================================= */
+
+.tarjeta-alerta {
+    flex: 0 0 280px;
+
+    min-height: 170px;
+
+    box-sizing: border-box;
+
+    padding: 15px;
+
+    background: #ffffff;
+
+    border: 1px solid #d9dee5;
+    border-radius: 10px;
+
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+
+/* Título de cada alerta */
+
+.tarjeta-alerta h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+
+/* Texto de las alertas */
+
+.tarjeta-alerta p {
+    margin: 7px 0;
+}
+
+
+/* =========================================
+   RESUMEN DE ALERTAS
+   ========================================= */
+
+.resumen-alertas {
+    flex: 0 0 250px;
+
+    box-sizing: border-box;
+
+    padding: 15px;
+
+    background: #ffffff;
+
+    border: 1px solid #d9dee5;
+    border-radius: 10px;
+}
+
+
+/* =========================================
+   CUANDO NO HAY ALERTAS
+   ========================================= */
+
+.alerta-normal {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 20px;
+
+    background: #ffffff;
+
+    border: 1px solid #d9dee5;
+    border-radius: 10px;
+
+    text-align: center;
+}
+
+
+/* =========================================
+   ERROR
+   ========================================= */
+
+.alerta-error {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 20px;
+
+    background: #ffffff;
+
+    border: 1px solid #d9dee5;
+    border-radius: 10px;
+}
+
+
+/* =========================================
+   BARRA DE DESPLAZAMIENTO HORIZONTAL
+   ========================================= */
+
+#listaAlertas::-webkit-scrollbar {
+    height: 8px;
+}
+
+#listaAlertas::-webkit-scrollbar-thumb {
+    background: #b8c0ca;
+    border-radius: 10px;
+}
+
+#listaAlertas::-webkit-scrollbar-track {
+    background: #edf0f3;
+}
+
+
+/* =========================================
+   CELULAR
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    #listaAlertas {
+        min-height: 195px;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .tarjeta-alerta {
+        flex: 0 0 250px;
+        min-height: 165px;
+    }
+
+}
+
+/* =========================================
+   STOCK DE ALICORP EN HORIZONTAL
+   ========================================= */
+
+#listaStock {
+    width: 100%;
+    box-sizing: border-box;
+
+    margin-top: 20px;
+    padding: 15px;
+
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    background: #f7f9fb;
+    border: 1px solid #d9dee5;
+    border-radius: 12px;
+
+    min-height: 230px;
+}
+
+
+/* =========================================
+   TARJETAS DE PRODUCTOS
+   ========================================= */
+
+#listaStock .producto-stock {
+    flex: 0 0 300px;
+
+    min-height: 195px;
+
+    box-sizing: border-box;
+
+    padding: 16px;
+
+    background: #ffffff;
+
+    border: 1px solid #d9dee5;
+    border-radius: 10px;
+
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+
+/* Nombre del producto */
+
+#listaStock .producto-stock h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+
     font-size: 16px;
 }
 
-#resultado,
-#resultadoIngreso,
-#resultadoSalida {
-    margin-top: 12px;
-    padding: 10px;
-    font-weight: bold;
+
+/* Información */
+
+#listaStock .producto-stock p {
+    margin: 7px 0;
+
+    font-size: 14px;
 }
 
-/* Tabla */
 
+/* =========================================
+   BARRA HORIZONTAL
+   ========================================= */
+
+#listaStock::-webkit-scrollbar {
+    height: 8px;
+}
+
+#listaStock::-webkit-scrollbar-thumb {
+    background: #b8c0ca;
+    border-radius: 10px;
+}
+
+#listaStock::-webkit-scrollbar-track {
+    background: #edf0f3;
+}
+
+
+/* =========================================
+   CELULAR
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    #listaStock {
+        min-height: 215px;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    #listaStock .producto-stock {
+        flex: 0 0 270px;
+        min-height: 190px;
+    }
+
+}
+/* Reducir ligeramente la letra del inventario */
 .tabla-productos {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
+    font-size: 13px;
 }
 
 .tabla-productos th,
 .tabla-productos td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
+    font-size: 13px;
+}
+/* =========================================
+   INVENTARIO - SEPARACIÓN DE PRODUCTOS
+   ========================================= */
+
+/* Reducir ligeramente el tamaño de letra */
+.tabla-productos {
+    font-size: 13px;
 }
 
-.tabla-productos th {
-    background: #f0f2f5;
+/* Líneas para separar cada producto */
+.tabla-productos tbody tr {
+    border-bottom: 1px solid #d9dee5;
 }
 
-/* Adaptación para celulares */
+/* Espaciado de cada fila */
+.tabla-productos tbody td {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 13px;
+}
 
-@media (max-width: 700px) {
+/* Evitar que la última fila tenga una línea extra */
+.tabla-productos tbody tr:last-child {
+    border-bottom: none;
+}
 
-    .contenedor {
-        width: 100%;
-        margin: 0;
-        padding: 15px;
-        border-radius: 0;
+/* Encabezado del inventario */
+.tabla-productos thead th {
+    font-size: 13px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+/* logo alicorp Franklin */
+.logo-alicorp {
+    display: block;
+    width: 150px;
+    height: auto;
+    margin: 0 auto 15px auto;
+    object-fit: contain;
+}
+
+/* Ajuste del menú de Alicorp en celulares */
+@media (max-width: 600px) {
+
+    #contenidoApp .panel-admin {
+        padding-left: 15px;
+        padding-right: 15px;
+        box-sizing: border-box;
     }
 
-    h1 {
-        font-size: 25px;
+    #contenidoApp .panel-admin > button {
+        margin-bottom: 18px;
     }
 
-    h2 {
-        font-size: 20px;
+    #contenidoApp .panel-admin > button:last-child {
+        margin-top: 25px;
     }
 
-    .tabla-productos {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
-
-    .tabla-productos th,
-    .tabla-productos td {
-        padding: 8px;
-        font-size: 13px;
-    }
-
-    button {
-        font-size: 16px;
-        padding: 14px;
-    }
-
-    input,
-    select {
-        font-size: 16px;
-        padding: 13px;
-    }
 }

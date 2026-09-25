@@ -1,12 +1,78 @@
+// ======================================================
+// INVENTARIO - ALICORP SOLUCIONES CUSCO
+// ======================================================
+
+// Elementos de la pantalla
 const btnProductos = document.getElementById("btnProductos");
 const listaProductos = document.getElementById("listaProductos");
 
-const formIngreso = document.getElementById("formIngreso");
-const productoIngreso = document.getElementById("productoIngreso");
-const resultadoIngreso = document.getElementById("resultadoIngreso");
-const formSalida = document.getElementById("formSalida");
-const productoSalida = document.getElementById("productoSalida");
-const resultadoSalida = document.getElementById("resultadoSalida");
+// Panadería actualmente seleccionada
+let panaderiaActual = null;
+let panaderiaIdActual = null;
+
+
+// ======================================================
+// ESTABLECER PANADERÍA
+// ======================================================
+
+async function establecerPanaderia(nombrePanaderia) {
+
+    const { data, error } = await supabaseClient
+        .from("panaderias")
+        .select("id, nombre")
+        .eq("nombre", nombrePanaderia)
+        .limit(1);
+
+    if (error) {
+        throw error;
+    }
+
+    if (!data || data.length === 0) {
+        throw new Error(
+            "No se encontró la panadería: " + nombrePanaderia
+        );
+    }
+
+    panaderiaActual = data[0].nombre;
+    panaderiaIdActual = data[0].id;
+
+    console.log(
+        "Panadería seleccionada:",
+        panaderiaActual,
+        "ID:",
+        panaderiaIdActual
+    );
+}
+
+
+// ======================================================
+// ABRIR INVENTARIO DE UNA PANADERÍA
+// ======================================================
+
+async function abrirInventarioPanaderia(nombrePanaderia) {
+
+    try {
+
+        await establecerPanaderia(nombrePanaderia);
+
+        await cargarInventario();
+
+    } catch (error) {
+
+        console.error(
+            "Error al abrir inventario:",
+            error
+        );
+
+        if (listaProductos) {
+            listaProductos.innerHTML = `
+                <p style="color:red;">
+                    ❌ No se pudo abrir el inventario.
+                </p>
+            `;
+        }
+    }
+}
 
 
 // ======================================================
@@ -15,129 +81,347 @@ const resultadoSalida = document.getElementById("resultadoSalida");
 
 async function cargarInventario() {
 
-    listaProductos.innerHTML = "⏳ Cargando inventario...";
+    if (!listaProductos) {
+        console.error("No existe listaProductos");
+        return;
+    }
+
+    listaProductos.innerHTML = `
+        <p>⏳ Cargando inventario...</p>
+    `;
+
+    if (!panaderiaIdActual) {
+
+        listaProductos.innerHTML = `
+            <p style="color:red;">
+                ❌ No se ha seleccionado una panadería.
+            </p>
+        `;
+
+        return;
+    }
+
 
     try {
 
-        // Obtener productos
-        const { data: productos, error: errorProductos } =
-            await supabaseClient
-                .from("productos")
-                .select("id, codigo, nombre, unidad, stock_minimo_porcentaje")
-                .order("codigo");
+        // --------------------------------------------------
+        // OBTENER PRODUCTOS
+        // --------------------------------------------------
+
+        const {
+            data: productos,
+            error: errorProductos
+        } = await supabaseClient
+            .from("productos")
+            .select(
+                "id, codigo, nombre, unidad, stock_minimo_porcentaje"
+            )
+            .order("codigo");
 
         if (errorProductos) {
             throw errorProductos;
         }
 
 
-        // Obtener movimientos
-        const { data: movimientos, error: errorMovimientos } =
-            await supabaseClient
-                .from("movimientos")
-                .select("producto_id, tipo_movimiento, cantidad");
+        // --------------------------------------------------
+        // OBTENER MOVIMIENTOS DE ESTA PANADERÍA
+        // --------------------------------------------------
+
+        const {
+            data: movimientos,
+            error: errorMovimientos
+        } = await supabaseClient
+            .from("movimientos")
+            .select(`
+                producto_id,
+                tipo_movimiento,
+                cantidad,
+                precio_unitario,
+                fecha_movimiento,
+                fecha_vencimiento
+            `)
+            .eq(
+                "panaderia_id",
+                panaderiaIdActual
+            )
+            .order(
+                "fecha_movimiento",
+                { ascending: false }
+            );
 
         if (errorMovimientos) {
             throw errorMovimientos;
         }
 
 
-        // Calcular stock de cada producto
-        const stockPorProducto = {};
+        // --------------------------------------------------
+        // CALCULAR INFORMACIÓN DE CADA PRODUCTO
+        // --------------------------------------------------
+
+        const informacionProductos = {};
+
 
         movimientos.forEach(movimiento => {
 
             const productoId = movimiento.producto_id;
 
-            if (!stockPorProducto[productoId]) {
-                stockPorProducto[productoId] = 0;
+            if (!informacionProductos[productoId]) {
+
+                informacionProductos[productoId] = {
+
+                    stock: 0,
+
+                    precio: null,
+
+                    fechaIngreso: null,
+
+                    fechaVencimiento: null
+
+                };
             }
 
-            const cantidad = Number(movimiento.cantidad) || 0;
+
+            const cantidad =
+                Number(movimiento.cantidad) || 0;
+
 
             const tipo =
-                String(movimiento.tipo_movimiento)
-                    .trim()
-                    .toUpperCase();
+                String(
+                    movimiento.tipo_movimiento || ""
+                )
+                .trim()
+                .toUpperCase();
 
 
+            // Calcular stock
             if (tipo === "INGRESO") {
 
-                stockPorProducto[productoId] += cantidad;
+                informacionProductos[productoId].stock +=
+                    cantidad;
 
-            } else if (tipo === "SALIDA") {
+            }
 
-                stockPorProducto[productoId] -= cantidad;
+            if (tipo === "SALIDA") {
 
+                informacionProductos[productoId].stock -=
+                    cantidad;
+
+            }
+
+
+            // El primer movimiento INGRESO encontrado
+            // es el más reciente porque ordenamos descendente
+            if (
+                tipo === "INGRESO" &&
+                informacionProductos[productoId].precio === null
+            ) {
+
+                informacionProductos[productoId].precio =
+                    movimiento.precio_unitario;
+
+                informacionProductos[productoId].fechaIngreso =
+                    movimiento.fecha_movimiento;
+
+                informacionProductos[productoId].fechaVencimiento =
+                    movimiento.fecha_vencimiento;
             }
 
         });
 
 
-        // Crear tabla
+        // --------------------------------------------------
+        // CREAR TABLA
+        // --------------------------------------------------
+
         let html = `
-            <h3>📦 Inventario actual</h3>
 
-            <table class="tabla-productos">
+            <div class="encabezado-inventario">
 
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Producto</th>
-                        <th>Unidad</th>
-                        <th>Stock</th>
-                        <th>Mínimo</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
+                <h3>📦 Inventario actual</h3>
 
-                <tbody>
+                <p>
+                    <strong>Panadería:</strong>
+                    ${panaderiaActual}
+                </p>
+
+            </div>
+
+
+            <div style="
+                overflow-x:auto;
+                width:100%;
+            ">
+
+                <table class="tabla-productos">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Código</th>
+
+                            <th>Producto</th>
+
+                            <th>Unidad</th>
+
+                            <th>Stock actual</th>
+
+                            <th>Precio</th>
+
+                            <th>Fecha de ingreso</th>
+
+                            <th>Fecha de vencimiento</th>
+
+                            <th>Estado</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
         `;
 
 
+        // --------------------------------------------------
+        // GENERAR FILAS
+        // --------------------------------------------------
+
         productos.forEach(producto => {
 
+            const info =
+                informacionProductos[producto.id] || {
+
+                    stock: 0,
+                    precio: null,
+                    fechaIngreso: null,
+                    fechaVencimiento: null
+
+                };
+
+
             const stock =
-                stockPorProducto[producto.id] || 0;
+                Number(info.stock) || 0;
+
 
             const minimo =
-                Number(producto.stock_minimo_porcentaje) || 75;
+                Number(
+                    producto.stock_minimo_porcentaje
+                ) || 75;
 
 
-            let estado = "🟢 Normal";
+            // ----------------------------------------------
+            // PRECIO
+            // ----------------------------------------------
 
+            let precioTexto = "—";
 
-            if (stock <= 0) {
+            if (
+                info.precio !== null &&
+                info.precio !== undefined
+            ) {
 
-                estado = "🔴 Sin stock";
-
+                precioTexto =
+                    "S/ " +
+                    Number(info.precio)
+                        .toFixed(2);
             }
 
 
+            // ----------------------------------------------
+            // FECHA DE INGRESO
+            // ----------------------------------------------
+
+            let fechaIngresoTexto = "—";
+
+            if (info.fechaIngreso) {
+
+                fechaIngresoTexto =
+                    formatearFecha(
+                        info.fechaIngreso
+                    );
+            }
+
+
+            // ----------------------------------------------
+            // FECHA DE VENCIMIENTO
+            // ----------------------------------------------
+
+            let fechaVencimientoTexto = "—";
+
+            if (info.fechaVencimiento) {
+
+                fechaVencimientoTexto =
+                    formatearFecha(
+                        info.fechaVencimiento
+                    );
+            }
+
+
+            // ----------------------------------------------
+            // ESTADO
+            // ----------------------------------------------
+
+            const estado =
+                calcularEstado(
+                    stock,
+                    minimo,
+                    info.fechaVencimiento
+                );
+
+
             html += `
+
                 <tr>
 
-                    <td>${producto.codigo}</td>
+                    <td>
+                        ${producto.codigo}
+                    </td>
 
-                    <td>${producto.nombre}</td>
+                    <td>
+                        ${producto.nombre}
+                    </td>
 
-                    <td>${producto.unidad}</td>
+                    <td>
+                        ${producto.unidad || "—"}
+                    </td>
 
-                    <td><strong>${stock}</strong></td>
+                    <td>
+                        <strong>
+                            ${stock}
+                        </strong>
+                    </td>
 
-                    <td>${minimo}%</td>
+                    <td>
+                        ${precioTexto}
+                    </td>
 
-                    <td>${estado}</td>
+                    <td>
+                        ${fechaIngresoTexto}
+                    </td>
+
+                    <td>
+                        ${fechaVencimientoTexto}
+                    </td>
+
+                    <td>
+                        ${estado}
+                    </td>
 
                 </tr>
+
             `;
 
         });
 
 
         html += `
-                </tbody>
-            </table>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
         `;
 
 
@@ -146,423 +430,156 @@ async function cargarInventario() {
 
     } catch (error) {
 
-        console.error("Error:", error);
+        console.error(
+            "Error al cargar inventario:",
+            error
+        );
 
         listaProductos.innerHTML = `
+
             <p style="color:red;">
+
                 ❌ Error al cargar inventario:
+
                 ${error.message}
+
             </p>
+
         `;
-
     }
-
 }
 
 
 // ======================================================
-// CARGAR PRODUCTOS EN EL FORMULARIO DE INGRESO
+// CALCULAR ESTADO
 // ======================================================
 
-async function cargarProductosParaIngreso() {
+function calcularEstado(
+    stock,
+    minimo,
+    fechaVencimiento
+) {
 
-    try {
+    // Sin stock
+    if (stock <= 0) {
 
-        const { data, error } =
-            await supabaseClient
-                .from("productos")
-                .select("id, codigo, nombre")
-                .order("codigo");
-
-
-        if (error) {
-            throw error;
-        }
+        return "🔴 Sin stock";
+    }
 
 
-        productoIngreso.innerHTML =
-            '<option value="">Seleccione un producto</option>';
+    // Revisar vencimiento
+    if (fechaVencimiento) {
 
+        const hoy = new Date();
 
-        data.forEach(producto => {
-
-            const opcion =
-                document.createElement("option");
-
-            opcion.value = producto.id;
-
-            opcion.textContent =
-                `${producto.codigo} - ${producto.nombre}`;
-
-            productoIngreso.appendChild(opcion);
-
-        });
-
-
-    } catch (error) {
-
-        console.error(
-            "Error cargando productos:",
-            error
+        hoy.setHours(
+            0,
+            0,
+            0,
+            0
         );
 
+
+        const vencimiento =
+            new Date(
+                fechaVencimiento +
+                "T00:00:00"
+            );
+
+
+        // Producto vencido
+        if (vencimiento < hoy) {
+
+            return "❌ Vencido";
+        }
+
+
+        // Diferencia en días
+        const diferencia =
+            Math.ceil(
+                (
+                    vencimiento - hoy
+                ) /
+                (
+                    1000 *
+                    60 *
+                    60 *
+                    24
+                )
+            );
+
+
+        // Por vencer en 30 días
+        if (diferencia <= 30) {
+
+            return "⚠️ Por vencer";
+        }
     }
 
+
+    // Stock bajo
+    // El mínimo establecido actualmente
+    // es 75%
+    if (stock <= minimo) {
+
+        return "🟡 Stock bajo";
+    }
+
+
+    return "🟢 Normal";
 }
 
 
 // ======================================================
-// REGISTRAR INGRESO
+// FORMATEAR FECHA
 // ======================================================
 
-formIngreso.addEventListener(
-    "submit",
-    async function(event) {
+function formatearFecha(fecha) {
 
-        event.preventDefault();
-
-
-        resultadoIngreso.textContent =
-            "⏳ Registrando ingreso...";
-
-
-        const productoId =
-            productoIngreso.value;
-
-
-        const cantidad =
-            Number(
-                document.getElementById(
-                    "cantidadIngreso"
-                ).value
-            );
-
-
-        const precio =
-            Number(
-                document.getElementById(
-                    "precioIngreso"
-                ).value
-            );
-
-
-        const fecha =
-            document.getElementById(
-                "fechaIngreso"
-            ).value;
-
-
-        const observacion =
-            document.getElementById(
-                "observacionIngreso"
-            ).value;
-
-
-        if (
-            !productoId ||
-            cantidad <= 0 ||
-            precio < 0 ||
-            !fecha
-        ) {
-
-            resultadoIngreso.textContent =
-                "⚠️ Complete correctamente los campos.";
-
-            return;
-
-        }
-
-
-        try {
-
-            const { error } =
-                await supabaseClient
-                    .from("movimientos")
-                    .insert({
-
-                        producto_id:
-                            Number(productoId),
-
-                        lote_id:
-                            null,
-
-                        tipo_movimiento:
-                            "INGRESO",
-
-                        cantidad:
-                            cantidad,
-
-                        fecha_movimiento:
-                            `${fecha}T00:00:00`,
-
-                        precio_unitario:
-                            precio,
-
-                        observacion:
-                            observacion || null
-
-                    });
-
-
-            if (error) {
-                throw error;
-            }
-
-
-            resultadoIngreso.textContent =
-                "✅ Ingreso registrado correctamente.";
-
-
-            formIngreso.reset();
-
-
-            // Actualizar inventario inmediatamente
-            await cargarInventario();
-
-        } catch (error) {
-
-            console.error(error);
-
-            resultadoIngreso.textContent =
-                "❌ Error al registrar: " +
-                error.message;
-
-        }
-
+    if (!fecha) {
+        return "—";
     }
-);
 
-// ======================================================
-// CARGAR PRODUCTOS EN EL FORMULARIO DE SALIDA
-// ======================================================
 
-async function cargarProductosParaSalida() {
+    const fechaObjeto =
+        new Date(fecha);
 
-    try {
 
-        const { data, error } =
-            await supabaseClient
-                .from("productos")
-                .select("id, codigo, nombre")
-                .order("codigo");
+    if (
+        isNaN(
+            fechaObjeto.getTime()
+        )
+    ) {
 
-        if (error) {
-            throw error;
-        }
-
-        productoSalida.innerHTML =
-            '<option value="">Seleccione un producto</option>';
-
-        data.forEach(producto => {
-
-            const opcion =
-                document.createElement("option");
-
-            opcion.value = producto.id;
-
-            opcion.textContent =
-                `${producto.codigo} - ${producto.nombre}`;
-
-            productoSalida.appendChild(opcion);
-
-        });
-
-    } catch (error) {
-
-        console.error(
-            "Error cargando productos para salida:",
-            error
-        );
-
+        return fecha;
     }
+
+
+    return fechaObjeto.toLocaleDateString(
+        "es-PE",
+        {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        }
+    );
 }
 
+
 // ======================================================
-// REGISTRAR SALIDA
+// BOTÓN ACTUALIZAR INVENTARIO
 // ======================================================
 
-formSalida.addEventListener(
-    "submit",
-    async function(event) {
+if (btnProductos) {
 
-        event.preventDefault();
+    btnProductos.addEventListener(
+        "click",
+        cargarInventario
+    );
 
-        resultadoSalida.textContent =
-            "⏳ Verificando stock...";
-
-        const productoId =
-            Number(productoSalida.value);
-
-        const cantidad =
-            Number(
-                document.getElementById(
-                    "cantidadSalida"
-                ).value
-            );
-
-        const fecha =
-            document.getElementById(
-                "fechaSalida"
-            ).value;
-
-        const observacion =
-            document.getElementById(
-                "observacionSalida"
-            ).value;
+}
 
 
-        if (
-            !productoId ||
-            cantidad <= 0 ||
-            !fecha
-        ) {
-
-            resultadoSalida.textContent =
-                "⚠️ Complete correctamente los campos.";
-
-            return;
-        }
-
-
-        try {
-
-            // Obtener movimientos del producto
-            const { data: movimientos, error } =
-                await supabaseClient
-                    .from("movimientos")
-                    .select(
-                        "tipo_movimiento, cantidad"
-                    )
-                    .eq(
-                        "producto_id",
-                        productoId
-                    );
-
-            if (error) {
-                throw error;
-            }
-
-
-            // Calcular stock actual
-            let stockActual = 0;
-
-            movimientos.forEach(movimiento => {
-
-                const tipo =
-                    String(
-                        movimiento.tipo_movimiento
-                    )
-                    .trim()
-                    .toUpperCase();
-
-                const cantidadMovimiento =
-                    Number(
-                        movimiento.cantidad
-                    ) || 0;
-
-
-                if (tipo === "INGRESO") {
-
-                    stockActual +=
-                        cantidadMovimiento;
-
-                }
-
-                if (tipo === "SALIDA") {
-
-                    stockActual -=
-                        cantidadMovimiento;
-
-                }
-
-            });
-
-
-            // Verificar stock
-            if (cantidad > stockActual) {
-
-                resultadoSalida.innerHTML = `
-                    ❌ <strong>Stock insuficiente.</strong><br>
-                    Stock disponible: ${stockActual}<br>
-                    Cantidad solicitada: ${cantidad}
-                `;
-
-                return;
-            }
-
-
-            // Registrar salida
-            const { error: errorSalida } =
-                await supabaseClient
-                    .from("movimientos")
-                    .insert({
-
-                        producto_id:
-                            productoId,
-
-                        lote_id:
-                            null,
-
-                        tipo_movimiento:
-                            "SALIDA",
-
-                        cantidad:
-                            cantidad,
-
-                        fecha_movimiento:
-                            `${fecha}T00:00:00`,
-
-                        precio_unitario:
-                            0,
-
-                        observacion:
-                            observacion || null
-                    });
-
-
-            if (errorSalida) {
-                throw errorSalida;
-            }
-
-
-            const nuevoStock =
-                stockActual - cantidad;
-
-
-            resultadoSalida.innerHTML = `
-                ✅ <strong>Salida registrada correctamente.</strong><br>
-                Stock anterior: ${stockActual}<br>
-                Salida: ${cantidad}<br>
-                Nuevo stock: ${nuevoStock}
-            `;
-
-
-            formSalida.reset();
-
-
-            // Actualizar inventario
-            await cargarInventario();
-
-        } catch (error) {
-
-            console.error(error);
-
-            resultadoSalida.textContent =
-                "❌ Error al registrar salida: " +
-                error.message;
-        }
-
-    }
+console.log(
+    "✅ inventario.js cargado correctamente"
 );
-
-// ======================================================
-// INICIO
-// ======================================================
-
-btnProductos.addEventListener(
-    "click",
-    cargarInventario
-);
-
-cargarProductosParaIngreso();
-cargarProductosParaSalida();
