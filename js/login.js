@@ -1810,3 +1810,18 @@ async function cerrarSesion() {
 
     location.reload();
 }
+const campoPassword = document.getElementById("password");
+const btnMostrarPassword = document.getElementById("btnMostrarPassword");
+
+if (campoPassword && btnMostrarPassword) {
+    btnMostrarPassword.addEventListener("click", function () {
+        const mostrar = campoPassword.type === "password";
+
+        campoPassword.type = mostrar ? "text" : "password";
+        btnMostrarPassword.textContent = mostrar ? "🙈" : "👁️";
+
+        btnMostrarPassword.title = mostrar
+            ? "Ocultar contraseña"
+            : "Mostrar contraseña";
+    });
+}
